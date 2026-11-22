@@ -1,8 +1,11 @@
-// Cloudflare Workers (static assets only). Deployed by Workers Builds: `npm run build` then `npx wrangler deploy`.
+// Cloudflare Workers (static assets only). Deployed from GitHub Actions (.github/workflows/ci.yml).
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "fudoryu-dev",
   "compatibility_date": "2026-11-22",
+  // workers.dev URL stays on so PR preview versions get preview URLs
+  "workers_dev": true,
+  "preview_urls": true,
   "assets": {
     "directory": "./dist",
     // Unknown paths get dist/404.html with a 404 status

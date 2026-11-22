@@ -16,8 +16,15 @@ npx wrangler dev     # serve dist/ the way Cloudflare will (headers, 404s, redir
 
 ## Deploy
 
-Cloudflare Workers, static assets only (`wrangler.jsonc`). Workers Builds deploys every push to `main`
-(build: `npm run build`, deploy: `npx wrangler deploy`). Headers and caching: `public/_headers`.
+Cloudflare Workers, static assets only (`wrangler.jsonc`), deployed from GitHub Actions
+(`.github/workflows/ci.yml`):
+
+- **Push to `main`:** `verify` must pass, then `wrangler deploy` publishes to production.
+- **Pull request:** `verify`, then `wrangler versions upload` creates a preview URL (shown in the run summary)
+  without touching the live site.
+
+Needs two repository secrets: `CLOUDFLARE_API_TOKEN` (token from the "Edit Cloudflare Workers" template) and
+`CLOUDFLARE_ACCOUNT_ID`. Headers and caching: `public/_headers`. Roll back with `npx wrangler rollback`.
 
 ## Where things live
 

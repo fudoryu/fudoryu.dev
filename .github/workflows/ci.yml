@@ -1,5 +1,11 @@
 name: CI
 
+# verify  — every push and PR: format, lint, type-check, build.
+# deploy  — push to main, only after verify passes: build and `wrangler deploy` to production.
+# preview — PRs from this repo, only after verify passes: `wrangler versions upload` (preview URL, live site untouched).
+#
+# Required repository secrets: CLOUDFLARE_API_TOKEN ("Edit Cloudflare Workers" template), CLOUDFLARE_ACCOUNT_ID.
+
 on:
   push:
     branches: [main]
@@ -11,7 +17,11 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Supersede stale PR runs, but never cancel a production deploy halfway.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  WRANGLER_SEND_METRICS: 'false'
 
 jobs:
   verify:
@@ -32,3 +42,67 @@ jobs:
 
       # prettier --check, eslint, astro check, astro build
       - run: npm run verify
+
+  deploy:
+    needs: verify
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+      url: https://fudoryu.dev
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Deploy to Cloudflare Workers
+        run: npx wrangler deploy --message "${GITHUB_SHA::7} (run ${GITHUB_RUN_ID})"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  preview:
+    needs: verify
+    # Secrets aren't available to fork or Dependabot PRs, so skip those.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Upload preview version
+        run: |
+          npx wrangler versions upload \
+            --preview-alias "pr-${PR_NUMBER}" \
+            --message "PR #${PR_NUMBER} ${HEAD_SHA::7}" | tee wrangler-output.txt
+          {
+            echo "### Preview for PR #${PR_NUMBER}"
+            grep -Eo 'https://[^ ]+\.workers\.dev' wrangler-output.txt | sort -u | sed 's/^/- /'
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
