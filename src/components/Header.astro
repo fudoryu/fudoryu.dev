@@ -1,0 +1,79 @@
+---
+import Mei from '@/components/Mei.astro';
+import { site } from '@/data/site';
+const path = Astro.url.pathname;
+const nav = [
+  { href: '/projects/', label: 'Projects', match: '/projects' },
+  { href: '/writing/', label: 'Writing', match: '/writing' },
+  { href: '/about/', label: 'About', match: '/about' },
+];
+const isCurrent = (m: string) => path.startsWith(m);
+---
+
+<header id="top" class="frame">
+  <a href="/" class="mark" aria-label={`${site.brand}, home`}>
+    <Mei size="0.95em" horizontal decorative />
+    <span>{site.brand}</span>
+  </a>
+  <nav aria-label="Main">
+    <ul>
+      {nav.map((n) => (
+        <li>
+          <a href={n.href} aria-current={isCurrent(n.match) ? 'page' : undefined}>
+            {n.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+</header>
+
+<style>
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: clamp(1.25rem, 4vw, 2rem);
+    font-size: 0.9375rem;
+  }
+  .mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7em;
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    padding-block: 0.5rem;
+  }
+  /* Smallest phones: the name alone, so it never wraps beside the menu */
+  @media (max-width: 25rem) {
+    .mark :global(.mei) {
+      display: none;
+    }
+  }
+  ul {
+    display: flex;
+    gap: clamp(1rem, 4vw, 2rem);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  nav a {
+    display: inline-block;
+    padding-block: 0.6rem; /* a comfortable tap target without changing the look */
+    color: var(--iron);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  nav a:hover,
+  nav a[aria-current='page'] {
+    color: var(--sumi);
+  }
+  nav a[aria-current='page'] {
+    text-decoration: underline;
+    text-decoration-color: var(--ember);
+  }
+</style>

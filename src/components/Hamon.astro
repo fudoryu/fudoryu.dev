@@ -1,0 +1,103 @@
+---
+import { hamon } from '@/lib/hamon';
+/**
+ * Hamon — the temper line a smith's clay leaves along a blade's edge.
+ * Generated once at build time from a seed, so every page that uses the
+ * same seed gets the same line. Drawn once on load; the ember stays.
+ */
+interface Props {
+  seed?: number;
+  animate?: boolean;
+}
+const { seed = 7, animate = true } = Astro.props;
+const { d, end, width: W, height: H } = hamon(seed);
+---
+
+<svg
+  class:list={['hamon', { animate }]}
+  viewBox={`0 0 ${W} ${H}`}
+  preserveAspectRatio="none"
+  aria-hidden="true"
+  focusable="false"
+>
+  <path d={d} pathLength="1" vector-effect="non-scaling-stroke" />
+  <circle class="halo" cx={end.x - 4} cy={end.y} r="11" />
+  <circle class="ember" cx={end.x - 4} cy={end.y} r="3.5" />
+</svg>
+
+<style>
+  .hamon {
+    display: block;
+    width: 100%;
+    height: clamp(40px, 6vw, 64px);
+    overflow: visible;
+  }
+  path {
+    fill: none;
+    stroke: var(--sumi);
+    stroke-width: 1;
+    stroke-linecap: round;
+  }
+  .ember,
+  .halo {
+    fill: var(--ember);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .halo {
+    opacity: 0.16;
+  }
+  .animate path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw 2.6s cubic-bezier(0.65, 0, 0.35, 1) 0.3s forwards;
+  }
+  .animate .ember {
+    opacity: 0;
+    animation: ignite 0.9s ease-out 2.7s forwards;
+  }
+  .animate .halo {
+    opacity: 0;
+    animation: breathe 5s ease-in-out 3.2s infinite;
+  }
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes ignite {
+    from {
+      opacity: 0;
+      transform: scale(0.2);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 0.1;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 0.22;
+      transform: scale(1.15);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate path {
+      stroke-dashoffset: 0;
+      animation: none;
+    }
+    .animate .ember {
+      opacity: 1;
+      animation: none;
+    }
+    .animate .halo {
+      opacity: 0.16;
+      animation: none;
+    }
+  }
+</style>

@@ -1,0 +1,78 @@
+---
+import Base from '@/layouts/Base.astro';
+import { getProjects } from '@/lib/content';
+const projects = await getProjects();
+---
+
+<Base title="Projects" description="Case studies of data, ML and AI systems." image="/og/projects.png">
+  <section class="frame page">
+    <div class="row">
+      <div></div>
+      <header>
+        <h1>Projects</h1>
+        <p>Case studies: the problem, the architecture, the trade-offs and the code.</p>
+      </header>
+    </div>
+    {projects.length === 0 ? (
+      <div class="row">
+        <div></div>
+        <p class="empty">
+          The first projects are still on the anvil. Meanwhile, my
+          <a href="/about/#experience">experience</a> and <a href="/writing/">writing</a> show the work so
+          far.
+        </p>
+      </div>
+    ) : (
+      <ol class="list">
+        {projects.map((p) => (
+          <li class="row">
+            <div class="rail">{p.data.date.getUTCFullYear()}</div>
+            <div>
+              <h2>
+                <a href={`/projects/${p.id}/`}>{p.data.title}</a>
+              </h2>
+              <p>{p.data.summary}</p>
+              <p class="stack">{p.data.stack.join(', ')}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    )}
+  </section>
+</Base>
+
+<style>
+  .page {
+    padding-top: clamp(3rem, 10vh, 6rem);
+  }
+  header {
+    margin-bottom: 4rem;
+  }
+  h1 {
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
+    margin-bottom: 1rem;
+  }
+  header p,
+  .empty,
+  .stack {
+    color: var(--iron);
+    max-width: 32rem;
+  }
+  .list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 2.5rem;
+  }
+  h2 {
+    font-size: 1.375rem;
+    margin-bottom: 0.35rem;
+  }
+  h2 a {
+    text-decoration: none;
+  }
+  .stack {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+  }
+</style>

@@ -1,0 +1,57 @@
+---
+title: The blacksmith's colour scale
+description: Smiths read temperature from the glow of steel. Their chart is a sequential palette that has worked for centuries, and it teaches what a good colour scale needs.
+date: 2026-11-21
+tags: [data viz, colour]
+---
+
+import HeatScale from '@/components/viz/HeatScale.astro';
+
+Before thermocouples, a smith judged temperature by eye. Steel at forging heat glows a
+bright orange; quench it at cherry red and it hardens; leave it at straw yellow and it
+burns. The chart that encodes this knowledge is one of the oldest sequential colour
+scales in use, and it works for a reason data visualisation keeps rediscovering.
+
+## Lightness carries the order
+
+Hue alone is a poor way to encode quantity: nobody agrees whether green is "more" than
+blue. What readers do compare reliably is **lightness**. The smith's chart works because,
+as steel heats, it gets lighter at every step: faint red is nearly black, white heat is
+nearly white.
+
+<HeatScale />
+
+The dots climb without dipping. That property, monotonic perceived lightness, is the
+first thing to check in any sequential palette. Rainbow scales fail it: yellow sits in
+the middle but reads brighter than everything around it, and the eye invents a
+boundary that the data doesn't have.
+
+## Checking a palette in code
+
+Perceived lightness is cheap to compute. Convert each colour to linear RGB, take
+relative luminance, and map it to CIELAB L\*:
+
+```ts title="lightness.ts"
+const toLinear = (v: number) => {
+  const s = v / 255;
+  return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+};
+
+export function lightness([r, g, b]: [number, number, number]) {
+  const y = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+  const f = y > 216 / 24389 ? Math.cbrt(y) : (841 / 108) * y + 4 / 29;
+  return 116 * f - 16; // 0 = black, 100 = white
+}
+```
+
+Run it over every step of your scale. If the values aren't strictly increasing, readers
+will see structure that isn't there.
+
+## What this site borrows
+
+This site uses one colour from the chart, cherry, as its only accent. In dark mode it
+shifts to orange, the way steel looks brighter when the room is dark. Charts here draw
+from the full scale when a quantity needs it, and from ink and ash when it doesn't.
+
+> The colours on this page are approximations. Real steel shifts with alloy and with
+> the light in the room, which is why smiths kept their forges dim.

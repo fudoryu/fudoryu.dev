@@ -1,0 +1,42 @@
+---
+import Base from '@/layouts/Base.astro';
+import PostList from '@/components/PostList.astro';
+import { getPosts } from '@/lib/content';
+const posts = await getPosts();
+---
+
+<Base
+  title="Writing"
+  description="Notes on data engineering, machine learning and AI systems."
+  image="/og/writing.png"
+>
+  <section class="frame page">
+    <div class="row">
+      <div></div>
+      <header>
+        <h1>Writing</h1>
+        <p>
+          Notes on data engineering, machine learning and AI systems: what I tried, what held, and what broke.
+        </p>
+      </header>
+    </div>
+    <PostList posts={posts} />
+  </section>
+</Base>
+
+<style>
+  .page {
+    padding-top: clamp(3rem, 10vh, 6rem);
+  }
+  header {
+    margin-bottom: 4rem;
+  }
+  h1 {
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
+    margin-bottom: 1rem;
+  }
+  header p {
+    color: var(--iron);
+    max-width: 32rem;
+  }
+</style>

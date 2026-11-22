@@ -1,0 +1,109 @@
+---
+import Base from '@/layouts/Base.astro';
+import Hamon from '@/components/Hamon.astro';
+import { render, type CollectionEntry } from 'astro:content';
+import { getPosts } from '@/lib/content';
+import { formatDate, readingMinutes } from '@/lib/format';
+import { seedFrom } from '@/lib/hamon';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+const { post } = Astro.props;
+const { Content } = await render(post);
+const seed = seedFrom(post.id);
+const minutes = readingMinutes(post.body);
+---
+
+<Base
+  title={post.data.title}
+  description={post.data.description}
+  image={`/og/writing/${post.id}.png`}
+  article={{ published: post.data.date, updated: post.data.updated, tags: post.data.tags }}
+>
+  <article class="frame post">
+    <header class="row">
+      <div class="rail">
+        <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+        <span class="mins">{minutes} min read</span>
+      </div>
+      <div>
+        <h1>{post.data.title}</h1>
+        <p class="desc">{post.data.description}</p>
+        {post.data.draft && <p class="draft">Draft: only visible in development.</p>}
+      </div>
+    </header>
+    <div class="row">
+      <div></div>
+      <div class="line">
+        <Hamon seed={seed} animate={false} />
+      </div>
+    </div>
+    <div class="row">
+      <div class="rail tags">
+        {post.data.tags.map((t) => (
+          <span>{t}</span>
+        ))}
+      </div>
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+    <div class="row back">
+      <div></div>
+      <a href="/writing/">All writing</a>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .post {
+    padding-top: clamp(3rem, 10vh, 6rem);
+  }
+  .rail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .mins {
+    opacity: 0.8;
+  }
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    line-height: 1.1;
+    margin-bottom: 1.25rem;
+  }
+  .desc {
+    color: var(--iron);
+    font-size: 1.125rem;
+    max-width: 34rem;
+  }
+  .draft {
+    color: var(--ember);
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+  }
+  .line {
+    margin-block: 2.5rem 3rem;
+    max-width: var(--measure);
+  }
+  .tags {
+    padding-top: 0.45rem;
+  }
+  @media (max-width: 47.99rem) {
+    .tags {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 0 1rem;
+      margin-bottom: 1.5rem;
+    }
+  }
+  .back {
+    margin-top: 5rem;
+    font-size: 0.9375rem;
+  }
+</style>

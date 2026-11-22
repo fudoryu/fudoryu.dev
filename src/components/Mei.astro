@@ -1,0 +1,55 @@
+---
+/**
+ * 不動流 (fudō-ryū, "the immovable school") — the site's maker's mark. Set
+ * vertically like a smith's mei on a tang, or horizontally beside the name in
+ * the header logo. Outlines are extracted from Noto Serif JP (SIL OFL) so no
+ * Japanese web font has to be shipped for three characters.
+ * Path data lives in src/data/mei.ts (stacked vertically).
+ */
+import { MEI_EM, MEI_GAP, MEI_HEIGHT, MEI_VIEWBOX, MEI_WIDTH, meiGlyphs } from '@/data/mei';
+
+interface Props {
+  size?: string; // size of one character, any CSS length
+  horizontal?: boolean;
+  /** Decorative when it sits next to text that already says the name */
+  decorative?: boolean;
+}
+const { size = '1.5rem', horizontal = false, decorative = false } = Astro.props;
+
+const H_GAP = 60; // tighter tracking when set in a line
+const n = meiGlyphs.length;
+const viewBox = horizontal ? `0 -20 ${n * MEI_EM + (n - 1) * H_GAP} ${MEI_EM + 40}` : MEI_VIEWBOX;
+const ratio = horizontal ? (MEI_EM + 40) / (n * MEI_EM + (n - 1) * H_GAP) : MEI_HEIGHT / MEI_WIDTH;
+// Glyphs are stored stacked; move each one up into a row and across.
+const place = (i: number) =>
+  horizontal ? `translate(${i * (MEI_EM + H_GAP)} ${-i * (MEI_EM + MEI_GAP)})` : undefined;
+const width = horizontal ? `calc(${size} * ${n} * ${(MEI_EM + H_GAP) / MEI_EM})` : size;
+const a11y = decorative
+  ? { 'aria-hidden': 'true' as const }
+  : { role: 'img' as const, 'aria-label': '不動流 (fudō-ryū)' };
+---
+
+<svg
+  class:list={['mei', { horizontal }]}
+  viewBox={viewBox}
+  style={`--mei-width: ${width}; --mei-ratio: ${ratio}`}
+  lang="ja"
+  {...a11y}
+>
+  {!decorative && <title>不動流 — fudō-ryū</title>}
+  {meiGlyphs.map((g, i) => (
+    <path d={g.d} transform={place(i)} />
+  ))}
+</svg>
+
+<style>
+  .mei {
+    display: block;
+    width: var(--mei-width);
+    height: calc(var(--mei-width) * var(--mei-ratio));
+    fill: var(--ember);
+  }
+  .horizontal {
+    display: inline-block;
+  }
+</style>

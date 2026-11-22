@@ -1,0 +1,64 @@
+---
+/**
+ * The home page hero image: an ensō made of data points. On load the points
+ * start as Gaussian noise and settle into the brush circle, the way a diffusion
+ * model denoises; one ember marks where the brush lifts. No JavaScript.
+ */
+import { enso } from '@/lib/enso';
+
+interface Props {
+  seed?: number;
+}
+const { seed = 3 } = Astro.props;
+const { points, ember, size } = enso(seed);
+const f = (n: number) => +n.toFixed(1);
+// Built as one string so the ~1,400 dots don't each carry Astro's scoping attribute.
+// --x/--y: where the dot starts in the noise (user units); --d: delay in 50 ms steps.
+const dots = points
+  .map(
+    (p) =>
+      `<circle cx="${f(p.x)}" cy="${f(p.y)}" r="${f(p.r)}" opacity="${+p.o.toFixed(2)}" style="--x:${Math.round(p.dx)};--y:${Math.round(p.dy)};--d:${Math.round(p.delay / 50)}"/>`,
+  )
+  .join('');
+---
+
+<svg class="enso" viewBox={`0 0 ${size} ${size}`} aria-hidden="true" focusable="false">
+  <g class="ink" set:html={dots} />
+  <circle class="halo" cx={f(ember.x)} cy={f(ember.y)} r="10" />
+  <circle class="ember" cx={f(ember.x)} cy={f(ember.y)} r="3.6" />
+</svg>
+
+<style>
+  .enso {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .ink {
+    fill: var(--sumi);
+  }
+  .ink :global(circle) {
+    animation: denoise 2.2s cubic-bezier(0.16, 0.8, 0.2, 1) calc(var(--d) * 50ms) both;
+  }
+  .ember {
+    fill: var(--ember);
+    animation: ignite 0.6s ease-out 2.2s both;
+  }
+  .halo {
+    fill: var(--ember);
+    opacity: 0.16;
+    animation: ignite 0.6s ease-out 2.4s both;
+  }
+  @keyframes denoise {
+    from {
+      transform: translate(calc(var(--x) * 1px), calc(var(--y) * 1px));
+      opacity: 0.15;
+    }
+  }
+  @keyframes ignite {
+    from {
+      opacity: 0;
+    }
+  }
+</style>

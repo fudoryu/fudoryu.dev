@@ -1,0 +1,131 @@
+---
+import Base from '@/layouts/Base.astro';
+import Enso from '@/components/Enso.astro';
+import Hamon from '@/components/Hamon.astro';
+import PostList from '@/components/PostList.astro';
+import { site } from '@/data/site';
+import { getExperience, getPosts } from '@/lib/content';
+
+const [current] = (await getExperience()).filter((r) => !r.data.end);
+const posts = (await getPosts()).slice(0, 3);
+const endStop = (s: string) => (/[.!?]$/.test(s) ? s : `${s}.`);
+---
+
+<Base>
+  <section class="hero frame">
+    <div class="intro">
+      <div class="enso">
+        <Enso />
+      </div>
+      <p class="name">{site.jobTitle}</p>
+      <h1>I forge data products.</h1>
+      <p class="lede">
+        Data, machine learning and AI engineer. I build pipelines that hold under load, models that earn their
+        place in production, and the quiet plumbing that keeps both honest.
+      </p>
+      {current && (
+        <p class="now">
+          Currently {current.data.role} at {endStop(current.data.company)}{' '}
+          <a href="/about/#experience">See my experience</a>
+        </p>
+      )}
+    </div>
+    <div class="blade">
+      <Hamon seed={11} animate={false} />
+    </div>
+  </section>
+
+  {posts.length > 0 && (
+    <section class="section frame" aria-labelledby="writing-title">
+      <div class="row">
+        <div />
+        <h2 id="writing-title" class="section-title">
+          Recent writing
+        </h2>
+      </div>
+      <PostList posts={posts} />
+      <div class="row more">
+        <div />
+        <a href="/writing/">All writing</a>
+      </div>
+    </section>
+  )}
+</Base>
+
+<style>
+  .hero {
+    padding-top: clamp(2.5rem, 9vh, 6rem);
+  }
+  /* Phones: the ensō sits above the text. Wider: it sits in the rail, beside the headline. */
+  .intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'enso' 'name' 'title' 'lede' 'now';
+  }
+  .enso {
+    grid-area: enso;
+    --w: 9rem;
+    width: var(--w);
+    /* the circle sits inset in its box; pull it back to the text edge */
+    margin-left: calc(var(--w) * -0.06);
+    margin-bottom: 1.5rem;
+  }
+  .name {
+    grid-area: name;
+  }
+  h1 {
+    grid-area: title;
+  }
+  .lede {
+    grid-area: lede;
+  }
+  .now {
+    grid-area: now;
+  }
+  @media (min-width: 48rem) {
+    .intro {
+      grid-template-columns: var(--rail) minmax(0, var(--measure));
+      column-gap: 2.5rem;
+      grid-template-areas:
+        '. name'
+        'enso title'
+        '. lede'
+        '. now';
+    }
+    .enso {
+      --w: clamp(9rem, 16vw, 14rem);
+      /* larger than the rail: grow leftwards into the margin, centred on the headline */
+      justify-self: end;
+      align-self: center;
+      margin: 0;
+    }
+  }
+  .name {
+    color: var(--iron);
+    margin-bottom: 1.25rem;
+  }
+  h1 {
+    font-size: clamp(2.6rem, 7.5vw, 5.25rem);
+    line-height: 1.04;
+    letter-spacing: -0.01em;
+    margin-bottom: 2rem;
+    max-width: 12ch;
+  }
+  .lede {
+    font-size: clamp(1.0625rem, 1.6vw, 1.1875rem);
+    line-height: 1.65;
+    max-width: 34rem;
+  }
+  .now {
+    margin-top: 1.5rem;
+    color: var(--iron);
+    max-width: 34rem;
+  }
+  .blade {
+    margin-top: clamp(4rem, 11vh, 7rem);
+  }
+  .more {
+    margin-top: 2.5rem;
+    font-size: 0.9375rem;
+  }
+</style>

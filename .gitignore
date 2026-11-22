@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Build output and generated types
+dist/
+.astro/
+
+# Environment (keep a committed .env.example for documentation)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Caches
+.eslintcache
+.cache/
+
+# Hosting / deploy tooling
+.vercel/
+.netlify/
+.wrangler/
+
+# Editors (share recommended extensions only)
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local AI agent settings (shared settings stay committed)
+.claude/settings.local.json
+
+# Python (scripts/)
+__pycache__/
+.venv/

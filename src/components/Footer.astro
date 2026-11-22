@@ -1,0 +1,157 @@
+---
+import Mei from '@/components/Mei.astro';
+import { site } from '@/data/site';
+const year = new Date().getFullYear();
+const years = year > site.since ? `${site.since}–${year}` : `${year}`;
+
+const groups = [
+  {
+    title: 'Site',
+    links: [
+      { label: 'Projects', href: '/projects/' },
+      { label: 'Writing', href: '/writing/' },
+      { label: 'About', href: '/about/' },
+    ],
+  },
+  {
+    title: 'Connect',
+    links: [
+      { label: 'GitHub', href: site.links.github },
+      { label: 'LinkedIn', href: site.links.linkedin },
+      { label: 'Email', href: site.links.email && `mailto:${site.links.email}` },
+    ].filter((l) => l.href),
+  },
+  {
+    title: 'Follow',
+    links: [{ label: 'RSS feed', href: '/rss.xml' }],
+  },
+];
+---
+
+<footer class="frame">
+  <div class="row top">
+    <div class="rail mark">
+      <Mei size="1.125rem" />
+    </div>
+    <div class="main">
+      <div class="brand">
+        <p class="name">{site.brand}</p>
+        <p class="tagline">{site.jobTitle}. Pipelines, models and the systems that keep them honest.</p>
+      </div>
+      <nav class="groups" aria-label="Footer">
+        {groups.map((g) => (
+          <div>
+            <h2>{g.title}</h2>
+            <ul>
+              {g.links.map((l) => (
+                <li>
+                  <a href={l.href}>{l.label}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </nav>
+    </div>
+  </div>
+  <div class="row bottom">
+    <div></div>
+    <div class="legal">
+      <p>
+        <small>
+          © {years} {site.name}. All rights reserved.
+        </small>
+      </p>
+      <a href="#top">Back to top</a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  footer {
+    margin-top: clamp(6rem, 18vh, 10rem);
+    padding-bottom: 3rem;
+    font-size: 0.875rem;
+    color: var(--iron);
+  }
+  /* The rule sits inside the frame padding so it lines up with the header's edges */
+  .top {
+    padding-top: 3.5rem;
+    border-top: 1px solid var(--hairline);
+  }
+  .mark {
+    display: none;
+  }
+  @media (min-width: 48rem) {
+    .mark {
+      display: block;
+      padding-top: 0.2rem;
+    }
+  }
+  .main {
+    display: grid;
+    gap: 2.5rem;
+  }
+  /* Wider screens: the bio sits on the same line as the link groups */
+  @media (min-width: 48rem) {
+    .main {
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 3fr);
+      gap: 2rem;
+    }
+  }
+  .name {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--sumi);
+    line-height: 1.2;
+  }
+  .tagline {
+    margin-top: 0.5rem;
+    max-width: 18rem;
+  }
+  .groups {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem 1rem;
+  }
+  h2 {
+    font-family: var(--font-body);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--sumi);
+    margin-bottom: 0.4rem;
+  }
+  ul {
+    display: grid;
+    gap: 0;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  a {
+    display: inline-block;
+    padding-block: 0.3rem; /* tap target */
+    text-decoration-color: transparent;
+  }
+  a:hover {
+    color: var(--sumi);
+    text-decoration-color: var(--ember);
+  }
+  /* Full-width rule, same edges as the one above */
+  .bottom {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--hairline);
+  }
+  .legal {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem 2rem;
+    font-size: 0.8125rem;
+  }
+  .legal small {
+    font-size: inherit;
+  }
+</style>

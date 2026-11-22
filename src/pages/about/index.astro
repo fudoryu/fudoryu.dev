@@ -1,0 +1,98 @@
+---
+import Base from '@/layouts/Base.astro';
+import { render } from 'astro:content';
+import { Content as Intro } from '@/data/about.md';
+import { site } from '@/data/site';
+import { getExperience } from '@/lib/content';
+import { formatSpan } from '@/lib/format';
+
+const roles = await getExperience();
+const rendered = await Promise.all(roles.map(async (r) => ({ r, Content: (await render(r)).Content })));
+---
+
+<Base
+  title="About"
+  description={`About ${site.name}: data, machine learning and AI engineer. Background, experience and how to get in touch.`}
+  image="/og/about.png"
+>
+  <section class="frame page">
+    <div class="row">
+      <div></div>
+      <header>
+        <h1>About</h1>
+        <div class="prose intro">
+          <Intro />
+        </div>
+      </header>
+    </div>
+  </section>
+
+  <section id="experience" class="section frame" aria-labelledby="experience-title">
+    <div class="row">
+      <div></div>
+      <h2 id="experience-title" class="section-title">
+        Experience
+      </h2>
+    </div>
+    <ol class="roles">
+      {rendered.map(({ r, Content }) => (
+        <li class="row">
+          <div class="rail">{formatSpan(r.data.start, r.data.end)}</div>
+          <article>
+            <h3>{r.data.role}</h3>
+            <p class="company">
+              {r.data.url ? <a href={r.data.url}>{r.data.company}</a> : r.data.company}
+              {r.data.location && <span>, {r.data.location}</span>}
+            </p>
+            <p class="summary">{r.data.summary}</p>
+            <div class="prose detail">
+              <Content />
+            </div>
+            {r.data.stack.length > 0 && <p class="stack">{r.data.stack.join(', ')}</p>}
+          </article>
+        </li>
+      ))}
+    </ol>
+  </section>
+</Base>
+
+<style>
+  .page {
+    padding-top: clamp(3rem, 10vh, 6rem);
+  }
+  h1 {
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
+    margin-bottom: 2rem;
+  }
+  .roles {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 3.75rem;
+  }
+  h3 {
+    font-size: 1.375rem;
+  }
+  .company {
+    color: var(--iron);
+    margin-top: 0.2rem;
+  }
+  .summary {
+    margin-top: 1rem;
+    max-width: var(--measure);
+  }
+  .detail {
+    margin-top: 0.75rem;
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+  .detail :global(li + li) {
+    margin-top: 0.3em;
+  }
+  .stack {
+    margin-top: 1rem;
+    color: var(--iron);
+    font-size: 0.875rem;
+  }
+</style>

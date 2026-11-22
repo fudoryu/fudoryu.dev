@@ -1,0 +1,65 @@
+---
+import Base from '@/layouts/Base.astro';
+import { render, type CollectionEntry } from 'astro:content';
+import { getProjects } from '@/lib/content';
+
+export async function getStaticPaths() {
+  const projects = await getProjects();
+  return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+const { project } = Astro.props;
+const { Content } = await render(project);
+const { title, summary, stack, repo, demo } = project.data;
+---
+
+<Base title={title} description={summary} image={`/og/projects/${project.id}.png`}>
+  <article class="frame page">
+    <header class="row">
+      <div class="rail">
+        {repo && <a href={repo}>Code</a>}
+        {demo && <a href={demo}>Live demo</a>}
+      </div>
+      <div>
+        <h1>{title}</h1>
+        <p class="desc">{summary}</p>
+        <p class="stack">{stack.join(', ')}</p>
+      </div>
+    </header>
+    <div class="row body">
+      <div></div>
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .page {
+    padding-top: clamp(3rem, 10vh, 6rem);
+  }
+  .rail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    margin-bottom: 1.25rem;
+  }
+  .desc,
+  .stack {
+    color: var(--iron);
+    max-width: 34rem;
+  }
+  .stack {
+    font-size: 0.875rem;
+    margin-top: 0.75rem;
+  }
+  .body {
+    margin-top: 4rem;
+  }
+</style>

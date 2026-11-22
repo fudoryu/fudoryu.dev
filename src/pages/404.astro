@@ -1,0 +1,29 @@
+---
+import Base from '@/layouts/Base.astro';
+---
+
+<Base title="Not found">
+  <section class="frame page">
+    <div class="row">
+      <div class="rail">404</div>
+      <div>
+        <h1>This page doesn't exist.</h1>
+        <p>
+          The link may be old, or the address mistyped. Start again from the <a href="/">home page</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+</Base>
+<style>
+  .page {
+    padding-top: clamp(4rem, 16vh, 10rem);
+  }
+  h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin-bottom: 1.25rem;
+  }
+  p {
+    color: var(--iron);
+  }
+</style>

@@ -1,0 +1,196 @@
+---
+/**
+ * Interactive heat-colour explorer.
+ * Static HTML renders immediately; Observable Plot is loaded only when the
+ * figure scrolls into view, so the post stays fast for readers who never reach it.
+ */
+import { heat } from '@/data/heat';
+const min = 450;
+const max = 1250;
+const start = 845;
+---
+
+<figure class="heat wide" data-heat={JSON.stringify(heat)} data-min={min} data-max={max}>
+  <div class="controls">
+    <div class="bar" aria-hidden="true">
+      <div class="glow"></div>
+    </div>
+    <label class="slider">
+      <span class="readout">
+        <output class="temp">{start} °C</output> <span class="name">Salmon</span>
+      </span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step="5"
+        value={start}
+        aria-label="Steel temperature in degrees Celsius"
+      />
+    </label>
+  </div>
+  <div
+    class="chart"
+    role="img"
+    aria-label="Perceived lightness rises steadily with temperature, from about 15 at faint red to about 97 at white heat."
+  >
+    <noscript>Enable JavaScript to see the chart.</noscript>
+  </div>
+  <figcaption class="caption">
+    Each dot is a named colour from the smith's chart, placed by temperature and by perceived lightness
+    (CIELAB L*). Drag the slider to heat the bar.
+  </figcaption>
+</figure>
+
+<style>
+  .heat {
+    margin-block: 2.5rem;
+  }
+  .controls {
+    display: grid;
+    gap: 1rem;
+  }
+  .bar {
+    height: 14px;
+    border-radius: 1px;
+    background: var(--ash-deep);
+    position: relative;
+    overflow: visible;
+  }
+  .glow {
+    position: absolute;
+    inset: 0;
+    background: var(--steel, #ec6434);
+    box-shadow: 0 0 var(--spread, 18px) var(--steel, #ec6434);
+    transition:
+      background 120ms linear,
+      box-shadow 120ms linear;
+  }
+  .slider {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .readout {
+    font-size: 0.9375rem;
+    color: var(--iron);
+  }
+  .temp {
+    font-variant-numeric: tabular-nums;
+    color: var(--sumi);
+  }
+  input[type='range'] {
+    width: 100%;
+    accent-color: var(--ember);
+  }
+  .chart {
+    margin-top: 2rem;
+    min-height: 320px;
+  }
+  .chart :global(svg) {
+    overflow: visible;
+  }
+</style>
+
+<script>
+  type Stop = { c: number; name: string; hex: string };
+
+  const hexToRgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const toLin = (v: number) => {
+    const s = v / 255;
+    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  const lightness = (hex: string) => {
+    const [r, g, b] = hexToRgb(hex).map(toLin);
+    const y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    const f = y > 216 / 24389 ? Math.cbrt(y) : (841 / 108) * y + 4 / 29;
+    return 116 * f - 16;
+  };
+  const lerpHex = (a: string, b: string, t: number) => {
+    const A = hexToRgb(a),
+      B = hexToRgb(b);
+    return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',')})`;
+  };
+  const colourAt = (stops: Stop[], c: number) => {
+    if (c <= stops[0].c) return { fill: stops[0].hex, near: stops[0], glow: 0 };
+    for (let i = 0; i < stops.length - 1; i++) {
+      const a = stops[i],
+        b = stops[i + 1];
+      if (c <= b.c) {
+        const t = (c - a.c) / (b.c - a.c);
+        return {
+          fill: lerpHex(a.hex, b.hex, t),
+          near: t < 0.5 ? a : b,
+          glow: (c - stops[0].c) / (stops.at(-1)!.c - stops[0].c),
+        };
+      }
+    }
+    const last = stops.at(-1)!;
+    return { fill: last.hex, near: last, glow: 1 };
+  };
+
+  for (const fig of document.querySelectorAll<HTMLElement>('figure.heat')) {
+    const stops: Stop[] = JSON.parse(fig.dataset.heat!);
+    const data = stops.map((s) => ({ ...s, L: lightness(s.hex) }));
+    const input = fig.querySelector('input')!;
+    const temp = fig.querySelector('.temp')!;
+    const name = fig.querySelector('.name')!;
+    const chartEl = fig.querySelector<HTMLElement>('.chart')!;
+    let Plot: typeof import('@observablehq/plot') | null = null;
+    let current = Number(input.value);
+
+    const draw = () => {
+      if (!Plot) return;
+      const width = chartEl.clientWidth;
+      const style = getComputedStyle(document.documentElement);
+      const iron = style.getPropertyValue('--iron').trim();
+      const ember = style.getPropertyValue('--ember').trim();
+      const hairline = style.getPropertyValue('--hairline').trim();
+      const svg = Plot.plot({
+        width,
+        height: Math.max(280, Math.min(380, width * 0.5)),
+        marginLeft: 40,
+        marginBottom: 40,
+        style: { background: 'transparent', color: iron, fontFamily: 'inherit', fontSize: '12px' },
+        x: { label: 'Temperature (°C)', domain: [450, 1250], ticks: 5, labelAnchor: 'right' },
+        y: { label: 'Lightness L*', domain: [0, 100], ticks: 5, labelAnchor: 'top' },
+        marks: [
+          Plot.gridY({ stroke: hairline, strokeOpacity: 1, ticks: 5 }),
+          Plot.ruleX([current], { stroke: ember, strokeWidth: 1 }),
+          Plot.line(data, { x: 'c', y: 'L', stroke: iron, strokeWidth: 1, curve: 'monotone-x' }),
+          Plot.dot(data, { x: 'c', y: 'L', r: 6, fill: 'hex', stroke: iron, strokeWidth: 0.75 }),
+          Plot.tip(
+            data,
+            Plot.pointerX({ x: 'c', y: 'L', title: (d) => `${d.name}\n${d.c} °C · L* ${d.L.toFixed(0)}` }),
+          ),
+        ],
+      });
+      chartEl.replaceChildren(svg);
+    };
+
+    const update = () => {
+      current = Number(input.value);
+      const { fill, near, glow } = colourAt(stops, current);
+      fig.style.setProperty('--steel', fill);
+      fig.style.setProperty('--spread', `${8 + glow * 28}px`);
+      temp.textContent = `${current} °C`;
+      name.textContent = near.name;
+      draw();
+    };
+
+    input.addEventListener('input', update);
+    update();
+
+    const io = new IntersectionObserver(
+      async ([e]) => {
+        if (!e.isIntersecting) return;
+        io.disconnect();
+        Plot = await import('@observablehq/plot');
+        draw();
+        new ResizeObserver(() => draw()).observe(chartEl);
+        matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+      },
+      { rootMargin: '200px' },
+    );
+    io.observe(fig);
+  }
+</script>
