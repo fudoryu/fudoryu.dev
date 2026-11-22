@@ -11,7 +11,13 @@ npm install
 npm run dev
 npm run build        # static output in dist/
 npm run verify       # prettier + eslint + astro check + build
+npx wrangler dev     # serve dist/ the way Cloudflare will (headers, 404s, redirects)
 ```
+
+## Deploy
+
+Cloudflare Workers, static assets only (`wrangler.jsonc`). Workers Builds deploys every push to `main`
+(build: `npm run build`, deploy: `npx wrangler deploy`). Headers and caching: `public/_headers`.
 
 ## Where things live
 
