@@ -1,3 +1,0 @@
-# Served by Cloudflare before static files. Keep in sync with `redirects` in astro.config.ts (used by the dev server).
-/experience/  /about/#experience  301
-/experience   /about/#experience  301

@@ -20,8 +20,6 @@ const fs = (pkg: string, file: string) => `${pkg}/files/${file}`;
 export default defineConfig({
   site: 'https://fudoryu.dev',
   trailingSlash: 'always',
-  // Experience now lives on the About page
-  redirects: { '/experience/': '/about/#experience' },
   fonts: [
     {
       provider: fontProviders.local(),
