@@ -65,3 +65,8 @@ Chart components load their JavaScript only when they scroll into view.
 - **Type:** Noto Serif JP for headings (Latin subsets only; the 不動流 mark is an SVG), IBM Plex Sans for text, IBM Plex Mono for code.
 - **Layout:** a narrow left rail for time and metadata, one reading column.
 - **The hamon:** the temper line under the hero is generated at build time from a seed; each post gets its own.
+
+## License
+
+Code is [MIT](LICENSE). Writing (posts, experience, project write-ups, the About text) is
+[CC BY 4.0](LICENSE-CONTENT.md).
